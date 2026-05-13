@@ -1,0 +1,12 @@
+title: Bucco — A Scientific Field Guide
+description: Border Collie puppyhood through neuroscience, learning theory, nutrition, and breed-specific behavior.
+theme: jekyll-theme-cayman
+show_downloads: false
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+markdown: kramdown
+kramdown:
+  input: GFM

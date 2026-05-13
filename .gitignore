@@ -1,0 +1,25 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Build artifacts (transient)
+missfont.log
+*.log
+slide-*.jpg
+.~lock.*
+*.tmp
+
+# Jekyll local build
+_site/
+.jekyll-cache/
+.sass-cache/
+Gemfile.lock
+
+# Node
+node_modules/
