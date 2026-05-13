@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bucco — Puppyhood Dashboard</title>
+<style>
+  :root {
+    --bg: #0e1014;
+    --panel: #161a22;
+    --panel-2: #1d222d;
+    --border: #2a3140;
+    --text: #e8ecf3;
+    --text-dim: #9ba6b8;
+    --accent: #7ab8ff;
+    --accent-2: #ffb86c;
+    --warn: #ff7066;
+    --good: #6fcf97;
+    --link: #9bcdfd;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 24px;
+  }
+  h1, h2, h3 { margin: 0 0 8px; font-weight: 600; letter-spacing: -0.01em; }
+  h1 { font-size: 28px; }
+  h2 { font-size: 20px; color: var(--accent); margin-top: 22px; }
+  h3 { font-size: 16px; color: var(--accent-2); }
+  p { margin: 6px 0; }
+  small { color: var(--text-dim); }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .top-nav {
+    display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 14px;
+    font-size: 12px; color: var(--text-dim);
+  }
+  .top-nav a { color: var(--accent); text-decoration: none; }
+  .top-nav a:hover { color: var(--accent-2); }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 22px;
+  }
+  .header .meta { color: var(--text-dim); font-size: 13px; }
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .tab {
+    padding: 9px 14px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer; color: var(--text-dim); font-size: 14px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--accent); color: #0e1014; border-color: var(--accent); font-weight: 600;
+  }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; margin-bottom: 16px;
+  }
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 760px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px;
+  }
+  .stat {
+    font-size: 26px; font-weight: 600; color: var(--accent-2);
+  }
+  .stat-label { color: var(--text-dim); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text-dim);
+  }
+  .pill-warn { background: #2e1a18; border-color: #693a32; color: #ffb0a8; }
+  .pill-good { background: #182a22; border-color: #2a5240; color: #a0e0bd; }
+  .pill-accent { background: #16243a; border-color: #2e4870; color: #b5d4fc; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table th, table td {
+    text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border);
+  }
+  table th { color: var(--text-dim); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type="number"], input[type="text"], select {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 8px 10px; font-size: 14px; width: 100%;
+  }
+  label { font-size: 13px; color: var(--text-dim); display: block; margin-bottom: 4px; }
+  .calc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px; }
+  .result {
+    background: linear-gradient(135deg, #16243a, #1d3450); border: 1px solid #2e4870;
+    border-radius: 10px; padding: 16px; margin-top: 10px;
+  }
+  .result .stat { color: var(--link); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  ul { margin: 6px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  .warning { color: var(--warn); font-weight: 500; }
+  .good { color: var(--good); }
+  .week-card {
+    background: var(--panel-2); border-left: 3px solid var(--accent); padding: 14px 16px;
+    margin-bottom: 10px; border-radius: 6px;
+  }
+  .week-card.now {
+    border-left-color: var(--accent-2);
+    background: linear-gradient(90deg, #2a1f12, var(--panel-2));
+  }
+  .week-card.milestone { border-left-color: var(--warn); }
+  details summary { cursor: pointer; padding: 4px 0; color: var(--accent); }
+  details summary:hover { color: var(--accent-2); }
+  details { margin: 8px 0; }
+  .key-grid {
+    display: grid; grid-template-columns: 200px 1fr; gap: 8px 14px; font-size: 14px;
+  }
+  .key-grid div:nth-child(odd) { color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-nav">
+    <a href="https://github.com/smatty-ice/bucco-first-year">View source on GitHub →</a>
+    <a href="docs/01-week-by-week.md">Read the chapters →</a>
+  </div>
+
+  <div class="header">
+    <div>
+      <h1>Bucco — Puppyhood Dashboard</h1>
+      <div class="meta">Born Feb 18, 2026 · Home since Apr 27, 2026 · North Hills Pittsburgh</div>
+    </div>
+    <div style="text-align: right;">
+      <div class="stat" id="currentAge">—</div>
+      <div class="stat-label">Current Age</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="now">This Week</div>
+    <div class="tab" data-tab="feeding">Feeding Calculator</div>
+    <div class="tab" data-tab="weekly">Weekly Tracker</div>
+    <div class="tab" data-tab="training">Training Games</div>
+    <div class="tab" data-tab="bc">BC Watchouts</div>
+    <div class="tab" data-tab="vet">Vet & Health</div>
+    <div class="tab" data-tab="reference">Quick Reference</div>
+  </div>
+
+  <div class="tab-content active" id="tab-now">
+    <div class="panel">
+      <h2>Where Bucco Is Right Now</h2>
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="stat-label">Developmental Phase</div>
+          <div class="stat" id="phaseStat">Primary Socialization (closing)</div>
+          <p><small>Window closes around week 16 (June 8, 2026). Pack in positive exposures.</small></p>
+        </div>
+        <div class="card">
+          <div class="stat-label">Expected Weight</div>
+          <div class="stat" id="weightStat">12-18 lb</div>
+          <p><small>Body condition matters more than the number. Target BCS 4-5/9.</small></p>
+        </div>
+        <div class="card">
+          <div class="stat-label">Daily Calories (est.)</div>
+          <div class="stat" id="caloriesStat">745-1015 kcal</div>
+          <p><small>4 meals/day. ~80% delivered through training.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>The 30-Day Focus (May 11 – June 11)</h3>
+      <ol>
+        <li><strong>Crate Games</strong> — 5 min/day. Door opens = stay. Release word = freedom.</li>
+        <li><strong>Reinforcement Zone (RZ)</strong> — feed into the zone, never reach to him.</li>
+        <li><strong>Restrained Recall</strong> — Nina holds, Scott runs and calls, Nina releases, party at finish.</li>
+      </ol>
+      <p>Plus: name recognition, It's Yer Choice (closed fist), cooperative-care pairing for the June 11 vet visit.</p>
+    </div>
+
+    <div class="panel">
+      <h3>This Week's Watchouts</h3>
+      <ul>
+        <li><span class="warning">First Fear Period</span> (8-11 weeks) is wrapping up. Anything scary now imprints harder than usual. Distance + food, not coddling.</li>
+        <li><span class="warning">Cats on leash always.</span> Every stalk rehearsal makes the next likelier. Kiki and Rainier are in his social template; keep them there as conspecifics, not prey.</li>
+        <li><span class="warning">No stairs, no jumping off furniture.</span> Growth plates wide open.</li>
+        <li>Vet visit June 11 — call now if not already scheduled. Bring tier-3 treats; treat the visit as a training session.</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h3>Next 4 Milestones</h3>
+      <div class="key-grid">
+        <div>June 11, 2026</div><div>16-week boosters (DHPP final + rabies). Last vaccines this round.</div>
+        <div>~June 25, 2026</div><div>Full immunity (~2 wk post-boosters). Can access pet store floors, structured class.</div>
+        <div>July 6, 2026 (week 20)</div><div>Loose-leash work begins. Adolescence approaches.</div>
+        <div>August 17, 2026 (6 mo)</div><div>Adolescence officially. Trainability dip expected. Maintain, don't expand.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-feeding">
+    <div class="panel">
+      <h2>Feeding Calculator</h2>
+      <p>RER = 70 × (kg<sup>0.75</sup>). Multiplied by life-stage factor for daily calorie target.</p>
+      <div class="calc-row">
+        <div>
+          <label for="bweight">Current weight (lb)</label>
+          <input type="number" id="bweight" value="15" min="2" max="80" step="0.1" />
+        </div>
+        <div>
+          <label for="bstage">Life stage</label>
+          <select id="bstage">
+            <option value="3.0">Puppy 0–4 months (×3.0)</option>
+            <option value="2.0" selected>Puppy 4–12 months (×2.0)</option>
+            <option value="1.6">Adult intact, active (×1.6)</option>
+            <option value="1.4">Adult intact, moderate (×1.4)</option>
+            <option value="1.2">Adult neutered, light (×1.2)</option>
+            <option value="2.5">Working dog, hard (×2.5)</option>
+          </select>
+        </div>
+      </div>
+      <div class="calc-row">
+        <div>
+          <label for="bbcs">Body condition score (1–9)</label>
+          <select id="bbcs">
+            <option>1 – emaciated</option>
+            <option>2 – very thin</option>
+            <option>3 – thin</option>
+            <option>4 – lean (+5%)</option>
+            <option selected>5 – ideal</option>
+            <option>6 – slightly overweight</option>
+            <option>7 – overweight (-10%)</option>
+            <option>8 – obese (-15%)</option>
+            <option>9 – severely obese (-20%)</option>
+          </select>
+        </div>
+        <div>
+          <label for="bkcup">Kibble kcal per cup (check the bag)</label>
+          <input type="number" id="bkcup" value="400" min="200" max="600" step="10" />
+        </div>
+      </div>
+
+      <div class="result" id="calcResult">
+        <div class="stat-label">Daily target</div>
+        <div class="stat"><span id="kcalOut">—</span> kcal/day</div>
+        <p><span id="cupsOut">—</span> cups/day · <span id="mealsOut">—</span> meals · <span id="perMealOut">—</span> per meal</p>
+        <small id="advisoryOut"></small>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Macros to Verify on the Bag</h3>
+      <table>
+        <thead><tr><th>Nutrient</th><th>Target (dry matter)</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Protein</td><td>≥22.5%</td><td>Animal protein #1 ingredient ideally</td></tr>
+          <tr><td>Fat</td><td>≥8.5%</td><td>Including DHA for brain (omega-3)</td></tr>
+          <tr><td>Calcium</td><td>1.0–1.4%</td><td>Medium breed sweet spot</td></tr>
+          <tr><td>Phosphorus</td><td>0.8–1.2%</td><td></td></tr>
+          <tr><td>Ca:P ratio</td><td>1.1:1 – 1.3:1</td><td>The most important number</td></tr>
+        </tbody>
+      </table>
+      <p><strong>AAFCO statement must say:</strong> "complete and balanced for growth" or "for all life stages."</p>
+    </div>
+
+    <div class="panel">
+      <h3>Treat Math</h3>
+      <p>Treats ≤ 10% of daily calories <em>if separate from kibble</em>. If using kibble as training currency: just shift meal calories, don't add.</p>
+      <p>Hierarchy (build with Bucco's preferences):</p>
+      <ul>
+        <li><strong>Tier 1:</strong> kibble (sufficient at home, DII 1-2)</li>
+        <li><strong>Tier 2:</strong> training treats, freeze-dried liver, cheese cubes</li>
+        <li><strong>Tier 3:</strong> boiled chicken, hot dog pieces, scrambled egg</li>
+        <li><strong>Tier 4:</strong> his absolute favorite (find it during low-stakes work, save it for recall + vet)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-weekly">
+    <div class="panel">
+      <h2>Week-by-Week First Year</h2>
+      <p><small>From the cornerstone document. Click a week to expand.</small></p>
+
+      <div class="week-card now">
+        <strong>Week 12 (May 11–17, 2026) — NOW</strong>
+        <span class="pill pill-warn">First Fear Period closing</span>
+        <ul>
+          <li>Weight: 12-18 lb · ~745-1015 kcal · 4 meals</li>
+          <li>Training: Crate Games + RZ + Restrained Recall (the three)</li>
+          <li>Socialization: 5+ new positive exposures (surface, sound, person, ride, environment)</li>
+          <li>Vet: 12-week shots done · Schedule June 11 booster</li>
+        </ul>
+      </div>
+
+      <div class="week-card">
+        <strong>Week 13 (May 18–24)</strong>
+        <ul>
+          <li>Weight: 14-21 lb · ~870-1085 kcal · 4 meals · teething begins</li>
+          <li>Add Hand Target. Crate Games duration to ~10 sec door-open.</li>
+          <li>First positive parking-lot exposure (carried, treats from distance).</li>
+        </ul>
+      </div>
+
+      <div class="week-card">
+        <strong>Week 14 (May 25–31)</strong>
+        <ul>
+          <li>Weight: 15-23 lb · ~935-1170 kcal</li>
+          <li>Socialization window closing — push 5+ exposures this week.</li>
+          <li>Begin Sit/Down position discrimination, no luring.</li>
+          <li>Vet dry run (drive there, eat treats in parking lot, leave).</li>
+        </ul>
+      </div>
+
+      <div class="week-card">
+        <strong>Week 15 (June 1–7)</strong>
+        <ul>
+          <li>Weight: 17-25 lb · ~1020-1235 kcal</li>
+          <li>RZ in motion: 2-3 steps. Foundation of loose-leash.</li>
+          <li>First positive structured interaction with known adult dog.</li>
+        </ul>
+      </div>
+
+      <div class="week-card milestone">
+        <strong>Week 16 (June 8–14) — KEY MILESTONE</strong>
+        <span class="pill pill-accent">June 11: final puppy boosters</span>
+        <ul>
+          <li>Weight: 18-27 lb · ~1085-1300 kcal</li>
+          <li>Primary socialization window closes (~now).</li>
+          <li>Vet visit IS the training session: treats through every step.</li>
+          <li>Watch first 4 hr post-shot for any concerning reaction.</li>
+        </ul>
+      </div>
+
+      <details>
+        <summary>Show weeks 17-26 (Engagement → 6 months)</summary>
+        <div class="week-card">
+          <strong>Week 17–18 (June 15-28)</strong>
+          <ul><li>Recovery + full immunity (~June 25). Begin Tug as currency. Drop multiplier to ×2.</li></ul>
+        </div>
+        <div class="week-card">
+          <strong>Week 19–20 (June 29 – July 12)</strong>
+          <ul><li>Long-line work. First "field trip." BC eye-stalk-chase starts to be visible. Manage deliberately.</li></ul>
+        </div>
+        <div class="week-card">
+          <strong>Week 21–25 (July 13 – Aug 16)</strong>
+          <ul><li>Generalization push (DII layering). Settle on mat to 1 min. First DII-5 recall on long line.</li></ul>
+        </div>
+        <div class="week-card milestone">
+          <strong>Week 26 (Aug 17–23) — 6 MONTHS / ADOLESCENCE</strong>
+          <ul>
+            <li>Trainability dip begins (Asher et al. 2020).</li>
+            <li>Maintain Phase 1-3 skills. Don't add new things.</li>
+            <li>Discuss spay/neuter — push for 12-18 months.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>Show weeks 27-39 (Adolescent storm + sport intro)</summary>
+        <div class="week-card">
+          <strong>Week 27–31 (Aug 24 – Sep 27)</strong>
+          <ul><li>Hormonal storm. Trainability low. Short sessions. Catch early signs of resource guarding, reactivity, compulsion NOW.</li></ul>
+        </div>
+        <div class="week-card milestone">
+          <strong>Week 32–36 (Sep 28 – Nov 1) — Second Fear Period possible</strong>
+          <ul><li>Sudden new fears possible. Distance + food + time. Don't force exposure.</li></ul>
+        </div>
+        <div class="week-card">
+          <strong>Week 37–39 (Nov 2-22) — 9 months</strong>
+          <ul><li>Sport intro: agility foundations (no jumping), nosework, disc, treibball, scent.</li></ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>Show weeks 40-52 (Late adolescence to 1 year)</summary>
+        <div class="week-card">
+          <strong>Week 40–47 (Nov 23 – Jan 17)</strong>
+          <ul><li>First off-leash work in enclosed spaces (long line still attached). Calmer dog emerges.</li></ul>
+        </div>
+        <div class="week-card milestone">
+          <strong>Week 48–52 (Jan 18 – Feb 15, 2027) — 1 YEAR</strong>
+          <ul>
+            <li>Transition to adult food gradually (7-10 days).</li>
+            <li>Annual booster + heartworm test.</li>
+            <li>Earliest reasonable spay/neuter window — most research supports waiting longer for medium breeds.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-training">
+    <div class="panel">
+      <h2>The Susan Garrett Game Library — When to Use What</h2>
+      <table>
+        <thead><tr><th>Game</th><th>What it builds</th><th>Start when</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Crate Games</strong></td><td>Impulse control, the crate as best place, foundation of every cued behavior</td><td>Week 12 (now)</td></tr>
+          <tr><td><strong>Reinforcement Zone</strong></td><td>Position habit, loose-leash foundation, heel later</td><td>Week 12 (now)</td></tr>
+          <tr><td><strong>Restrained Recall</strong></td><td>Emotional engine for recall</td><td>Week 12 (now)</td></tr>
+          <tr><td><strong>It's Yer Choice</strong></td><td>Self-selected impulse control</td><td>Week 12-13</td></tr>
+          <tr><td><strong>Name Recognition</strong></td><td>Orientation = "good things"</td><td>Week 12 (now)</td></tr>
+          <tr><td><strong>Hand Targeting</strong></td><td>Move dog around without luring; body awareness</td><td>Week 13-14</td></tr>
+          <tr><td><strong>Two-Toy Game</strong></td><td>Retrieve foundation</td><td>Week 17-19</td></tr>
+          <tr><td><strong>Tug as Currency</strong></td><td>Drive, engagement, drop on cue</td><td>Week 17-18</td></tr>
+          <tr><td><strong>Find It / Scatter</strong></td><td>Nose engagement, decompression</td><td>Week 19+</td></tr>
+          <tr><td><strong>Settle on Mat</strong></td><td>Off-switch, restaurant-readiness</td><td>Week 14, build slowly</td></tr>
+          <tr><td><strong>Capture Defaults</strong></td><td>Offered behaviors that hold through adolescence</td><td>Ongoing, daily</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>The Distraction Intensity Index (DII)</h3>
+      <p>Don't ask for behavior at a higher DII than you've trained it. Don't test what you haven't built.</p>
+      <table>
+        <thead><tr><th>DII</th><th>Environment</th><th>Bucco use</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Living room alone</td><td>Teaching anything new</td></tr>
+          <tr><td>2</td><td>Living room + family</td><td>Early fluency</td></tr>
+          <tr><td>3</td><td>Hallway, mild distractions</td><td>Fluency check</td></tr>
+          <tr><td>4</td><td>Backyard quiet</td><td>Adding mild challenge</td></tr>
+          <tr><td>5</td><td>Yard + squirrels visible</td><td>Real fluency test</td></tr>
+          <tr><td>6</td><td>Driveway, passing cars</td><td>Generalization</td></tr>
+          <tr><td>7</td><td>Quiet park, no other dogs</td><td>Recall begins testable</td></tr>
+          <tr><td>8</td><td>Sidewalk, other dogs at distance</td><td>Reliability check</td></tr>
+          <tr><td>9</td><td>Busy patio, kids, dogs</td><td>Late proofing</td></tr>
+          <tr><td>10</td><td>Game-day chaos</td><td>Master level</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>Three Questions Before Any Training Decision</h3>
+      <ol>
+        <li>What do I want him to <em>do</em>? (Define behavior, not "stop X.")</li>
+        <li>What's reinforcing the unwanted behavior <em>right now</em>? (Follow the money.)</li>
+        <li>How do I make the wanted behavior pay better than the alternative?</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-bc">
+    <div class="panel">
+      <h2>Border Collie–Specific Watchouts</h2>
+      <p>BCs aren't generic dogs with extra brain. They're behavioral specialists. Manage what makes them BCs.</p>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 class="warning">NEVER — Laser Pointers</h3>
+          <p>Not once. The BC brain is the most vulnerable canine brain to light fixation. Single sessions have produced lifetime compulsions. If a guest pulls one out, you take it.</p>
+        </div>
+        <div class="card">
+          <h3 class="warning">NEVER — Dog Parks</h3>
+          <p>BCs get bullied (small frame, intense focus) or develop herding/control issues toward other dogs. Most BC reactivity stories start at a dog park. Structured puppy class &gt; dog park, always.</p>
+        </div>
+        <div class="card">
+          <h3>Predatory Motor Pattern Sequence</h3>
+          <p>Orient → Eye → Stalk → Chase → (suppressed: grab-bite, kill-bite). The neural reward is in the stalk and chase, not the kill. Bucco's brain runs this circuit constantly.</p>
+          <p><strong>Give legitimate outlets:</strong> agility, disc, treibball, structured fetch.</p>
+        </div>
+        <div class="card">
+          <h3>Early Compulsion Signs</h3>
+          <ul>
+            <li>Staring at reflections, shadows, fan blades</li>
+            <li>Tail chasing beyond cute puppy moments</li>
+            <li>Snapping at invisible flies</li>
+            <li>Repetitive pacing in patterns</li>
+          </ul>
+          <p class="warning">Interrupt immediately. Persistent → veterinary behaviorist now, not later.</p>
+        </div>
+        <div class="card">
+          <h3>Eye Behavior</h3>
+          <p>The intense BC stare on a cat, child, car, or bike is self-reinforcing. The longer it goes, the harder to interrupt. Catch it within 1-2 seconds. Don't wait to see if it escalates.</p>
+        </div>
+        <div class="card">
+          <h3>Velcro-Dog Pattern</h3>
+          <p>BCs select one primary person and shadow them. Train alone-time deliberately (1 min → 30 min over weeks). Both Scott and Nina should run training sessions or Bucco becomes brittle around one handler only.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Documented BC Genetic Diseases</h3>
+      <table>
+        <thead><tr><th>Disease</th><th>Population</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>CEA (Collie Eye Anomaly)</td><td>~2.5% affected</td><td>Ask breeder for eye-clear or genetic clear status</td></tr>
+          <tr><td>TNS (Trapped Neutrophil Syndrome)</td><td>5.9-8% carrier; affected rare</td><td>If Bucco's healthy at 12 wk, not affected. Useful for breeding decisions only.</td></tr>
+          <tr><td>NCL5 (Neuronal Ceroid Lipofuscinosis)</td><td>~3.5% allele freq, rare affected</td><td>Genetic test available; symptoms onset 18-24 mo</td></tr>
+          <tr><td>MDR1</td><td>Rare in BCs (more common in Aussies, Shelties, Collies)</td><td>Confirm status before ivermectin, loperamide, vincristine</td></tr>
+          <tr><td>Hip Dysplasia</td><td>~12% per OFA</td><td>Lean BCS + no overexercise during growth = biggest controllable factor</td></tr>
+          <tr><td>Epilepsy</td><td>Variable, familial pattern</td><td>Onset 6 mo - 5 yr; no preventive test</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-vet">
+    <div class="panel">
+      <h2>Vet & Health Calendar</h2>
+      <table>
+        <thead><tr><th>Date</th><th>Event</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>May 11, 2026</td><td>12-wk + Lyme + Heartgard</td><td class="good">Done</td></tr>
+          <tr><td>June 11, 2026</td><td>16-wk boosters</td><td>DHPP final + rabies. Confirm lepto + bordetella for Pittsburgh.</td></tr>
+          <tr><td>~June 25, 2026</td><td>Full immunity</td><td>2 wk post-final. Group classes OK.</td></tr>
+          <tr><td>Monthly</td><td>Heartgard chewable</td><td>Set recurring iOS reminder.</td></tr>
+          <tr><td>~Aug 17, 2026</td><td>6-mo wellness</td><td>Discuss spay/neuter — push for 12-18 mo.</td></tr>
+          <tr><td>Feb 18, 2027</td><td>1-yr wellness + annual booster + HW test</td><td>Adult food transition (7-10 days).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3>Vaccine Reactions</h3>
+      <div class="grid grid-3">
+        <div class="card">
+          <h3 class="good">Normal (24-48h)</h3>
+          <ul>
+            <li>Lethargy</li>
+            <li>Mild injection site swelling</li>
+            <li>Low-grade fever</li>
+            <li>Reduced appetite one meal</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--accent-2);">Call Vet</h3>
+          <ul>
+            <li>Persistent vomiting</li>
+            <li>Diarrhea</li>
+            <li>Swelling &gt;5 days</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 class="warning">ER NOW</h3>
+          <ul>
+            <li>Hives anywhere</li>
+            <li>Facial swelling</li>
+            <li>Vomiting + collapse</li>
+            <li>Difficulty breathing</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Emergency Indicators (any age)</h3>
+      <ul>
+        <li class="warning">Bloated, hard abdomen + non-productive retching → GDV / bloat</li>
+        <li class="warning">Suspected toxin ingestion → ASPCA Poison Control (888-426-4435) + ER</li>
+        <li class="warning">Heatstroke: heavy panting, weakness, body temp &gt; 104°F</li>
+        <li class="warning">Seizures lasting &gt;2 minutes</li>
+        <li class="warning">Significant trauma — hit by car, dropped, attacked</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-reference">
+    <div class="panel">
+      <h2>Quick Reference Card</h2>
+
+      <h3>The Four R's</h3>
+      <ul>
+        <li><strong>Relationship</strong> — you are the most reinforcing thing in his world</li>
+        <li><strong>Recall</strong> — comes every time</li>
+        <li><strong>Retrieve</strong> — brings value back to the handler</li>
+        <li><strong>Reinforcement Zone</strong> — the side where reinforcement happens</li>
+      </ul>
+
+      <h3>Toxic Foods (no exceptions)</h3>
+      <p>Grapes, raisins, onions, garlic, chives, leeks, chocolate, xylitol, macadamia nuts, alcohol, cooked bones, avocado pits/skin, yeast dough, coffee/tea, marijuana, apple cores, peach/cherry pits.</p>
+
+      <h3>Body Condition Score (9-point)</h3>
+      <ul>
+        <li><strong>Target: 4-5</strong> for growing BC</li>
+        <li>Ribs felt easily, not seen</li>
+        <li>Waist visible from above</li>
+        <li>Tummy tuck from side</li>
+      </ul>
+
+      <h3>Sleep Needs by Age</h3>
+      <ul>
+        <li>8-16 weeks: 18-20 hr/day</li>
+        <li>4-6 months: 16-18 hr/day</li>
+        <li>6-12 months: 14-16 hr/day</li>
+        <li>Adult: 12-14 hr/day</li>
+      </ul>
+
+      <h3>5-Minute Rule (Exercise)</h3>
+      <p>Structured leash walking max: 5 min × months of age, twice a day. Free play in safe spaces self-regulates separately.</p>
+
+      <h3>When To Get Help</h3>
+      <ul>
+        <li><strong>Medical / sudden behavior change</strong> → Vet first</li>
+        <li><strong>Behavioral, mild</strong> → KPA-CTP or CPDT-KA trainer (+R only)</li>
+        <li><strong>Bite incident / compulsion</strong> → DACVB veterinary behaviorist</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+    });
+  });
+
+  const dob = new Date('2026-02-18');
+  const today = new Date();
+  const ageMs = today - dob;
+  const ageWeeks = Math.floor(ageMs / (1000 * 60 * 60 * 24 * 7));
+  const ageDays = Math.floor((ageMs / (1000 * 60 * 60 * 24)) % 7);
+  document.getElementById('currentAge').textContent = ageWeeks + 'w ' + ageDays + 'd';
+
+  const bweight = document.getElementById('bweight');
+  const bstage = document.getElementById('bstage');
+  const bbcs = document.getElementById('bbcs');
+  const bkcup = document.getElementById('bkcup');
+
+  function recalc() {
+    const wlb = parseFloat(bweight.value) || 0;
+    const wkg = wlb / 2.20462;
+    const mult = parseFloat(bstage.value);
+    const rer = 70 * Math.pow(wkg, 0.75);
+    let kcal = rer * mult;
+    const bcsIdx = bbcs.selectedIndex;
+    if (bcsIdx === 3) kcal *= 1.05;
+    if (bcsIdx === 5) kcal *= 1.0;
+    if (bcsIdx === 6) kcal *= 0.9;
+    if (bcsIdx === 7) kcal *= 0.85;
+    if (bcsIdx === 8) kcal *= 0.8;
+    const stageText = bstage.options[bstage.selectedIndex].text;
+    let meals = 2;
+    if (stageText.includes('0–4')) meals = 4;
+    else if (stageText.includes('4–12')) meals = 3;
+    else if (stageText.includes('Working')) meals = 2;
+    const kcup = parseFloat(bkcup.value) || 400;
+    const cups = kcal / kcup;
+    const perMeal = cups / meals;
+    document.getElementById('kcalOut').textContent = Math.round(kcal);
+    document.getElementById('cupsOut').textContent = cups.toFixed(2);
+    document.getElementById('mealsOut').textContent = meals;
+    document.getElementById('perMealOut').textContent = perMeal.toFixed(2) + ' cups';
+    let advisory = 'Recheck body condition every 2 weeks. Adjust ±10% based on BCS.';
+    if (bcsIdx <= 2) advisory = 'Below ideal. Increase by 10% and recheck in 2 weeks. Consider vet check for underlying cause.';
+    if (bcsIdx >= 6) advisory = 'Above ideal. Decrease by 10% and recheck in 2 weeks. Lean is the goal for joint health.';
+    document.getElementById('advisoryOut').textContent = advisory;
+  }
+  [bweight, bstage, bbcs, bkcup].forEach(el => el.addEventListener('input', recalc));
+  recalc();
+</script>
+</body>
+</html>
